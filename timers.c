@@ -5,9 +5,11 @@
 #include "midi.h"
 #include "midiplay.h"
 
+
 #define VOICES 15
 
-uint32_t input[4];
+
+
 struct {
     uint8_t in_use;
     uint8_t note;
@@ -23,6 +25,37 @@ struct {
 //    int     offset;
 //} sfx[VOICES]
 //      {0x34234, 1, 3123}, {0x34234, 1, 3123};
+
+void perturb(int *vx, int *vy)
+{
+    if (*vx > 0) {
+        *vx += (random()%3) - 1;
+        if (*vx >= 3)
+            *vx = 2;
+        if (*vx == 0)
+            *vx = 1;
+    } else {
+        *vx += (random()%3) - 1;
+        if (*vx <= -3)
+            *vx = -2;
+        if (*vx == 0)
+            *vx = -1;
+    }
+    if (*vy > 0) {
+        *vy += (random()%3) - 1;
+        if (*vy >= 3)
+            *vy = 2;
+        if (*vy == 0)
+            *vy = 1;
+    } else {
+        *vy += (random()%3) - 1;
+        if (*vy <= -3)
+            *vy = -2;
+        if (*vy == 0)
+            *vy = -1;
+    }
+}
+
 
 void init_dac(void)
 {
@@ -83,26 +116,8 @@ void init_tim2(int n) {
     TIM2->CR1 |= TIM_CR1_ARPE;
     TIM2->DIER |= TIM_DIER_UIE;
     NVIC->ISER[0] |= (1<<TIM2_IRQn);
-    NVIC_SetPriority(TIM2_IRQn, 3);
+    NVIC_SetPriority(TIM2_IRQn, 1);
     TIM2->CR1 |= TIM_CR1_CEN;
 }
 
-extern const Picture background; // A 240x320 background image
-extern const Picture ball; // A 19x19 purple ball with white boundaries
-extern const Picture paddle; // A 59x5 paddle
 
-const int border = 20;
-int xmin; // Farthest to the left the center of the ball can go
-int xmax; // Farthest to the right the center of the ball can go
-int ymin; // Farthest to the top the center of the ball can go
-int ymax; // Farthest to the bottom the center of the ball can go
-int x,y; // Center of ball
-int vx,vy; // Velocity components of ball
-
-int px; // Center of paddle offset
-int newpx; // New center of paddle
-
-
-#define TempPicturePtr(name,width,height) Picture name[(width)*(height)/6+2] = { {width,height,2} }
-
-TempPicturePtr(object,29,29);

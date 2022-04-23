@@ -1,3 +1,4 @@
+
 #include "stm32f0xx.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -105,7 +106,7 @@ void move_ball(void)
     LCD_DrawPicture(0,0,&background);
     int x = 120;
     int y = 160;
-    update(x,y);
+    update2(x,y);
     for(;;)
         for(int c=0; c<4; c++) {
             int dx=0;

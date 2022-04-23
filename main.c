@@ -3,7 +3,7 @@
 #include "lcd.h"
 #include "midi.h"
 #include "midiplay.h"
-uint32_t input[4];
+int32_t input[4];
 extern const Picture background; // A 240x320 background image
 extern const Picture ball; // A 19x19 purple ball with white boundaries
 extern const Picture paddle; // A 59x5 paddle
@@ -18,6 +18,7 @@ int vx,vy; // Velocity components of ball
 
 int px; // Center of paddle offset
 int newpx; // New center of paddle
+
 #define TempPicturePtr(name,width,height) Picture name[(width)*(height)/6+2] = { {width,height,2} }
 
 TempPicturePtr(object,29,29);
@@ -29,38 +30,75 @@ void setup_tim17()
         TIM17->ARR = 24-1;
         TIM17->DIER |= TIM_DIER_UIE;
         NVIC->ISER[0] = (1<<TIM17_IRQn);
-        NVIC_SetPriority(TIM17_IRQn, 1);
+        NVIC_SetPriority(TIM2_IRQn, 3);
         TIM17->CR1 |= TIM_CR1_CEN;
 }
-
+int count = 0;
+int newpy;
+int py;
 void TIM17_IRQHandler(void)
 {
     TIM17->SR &= ~TIM_SR_UIF;
-    check_key();
-    /*
-    int count = 0;
+
+
+    check_key(input);
+
     if(count == 0) {
         input[0] = 0;
         input[1] = 0;
         input[2] = 0;
         input[3] = 0;
         count++;
+
     }
-    */
-    if (input[0] < -10) {
-        newpx -= 1; }
-    else if(input[0] > 10) {
-        newpx += 1; }
-    if (newpx - paddle.width/2 <= border || newpx + paddle.width/2 >= 240-border)
+/*
+    if (input[0] < -10 && input[1] < -10) { //left x and down y
+        newpy -= 1; //down
+        newpx -= 1; //left
+    }
+    else if(input[0] > 10 && input[1] > 10) { //right and up
+        newpx += 1; //right
+        newpy += 1; // up
+    }
+    else if(input[0] > 10 && input[1] < -10) { //right and down
+           newpx += 1; //right
+           newpy -= 1; //down
+       }
+    else if(input[0] < -10 && input[1] > 10) { //left and up
+           newpx -= 1;
+           newpy += 1;
+       }*/
+    if(input[0] > 10 &&  -10 > input[1] < 10) {
+           newpx += 1; //right
+       }
+    if(input[0] < -10 &&  -10 > input[1] < 10) {
+            newpx -= 1; //left
+        }
+    if(input[1] < -10 &&  -10 > input[0] < 10) {
+            newpy -= 1; //down
+        }
+    if(input[1] > 10 &&  -10 > input[0] < 10) {
+            newpy += 1; //up
+        }
+    if (newpx - paddle.width/2 <= border || newpx + paddle.width/2 >= 240-border) {
         newpx = px;
+        newpy = py;
+    }
     if (newpx != px) {
         px = newpx;
-
         TempPicturePtr(tmp,61,5);
         pic_subset(tmp, &background, px-tmp->width/2, background.height-border-tmp->height); // Copy the background
         pic_overlay(tmp, 1, 0, &paddle, -1);
         LCD_DrawPicture(px-tmp->width/2, background.height-border-tmp->height, tmp);
     }
+    /*else if(newpy != py) {
+        py = newpy;
+        TempPicturePtr(tmp,61,5);
+               pic_subset(tmp, &background, background.width-border-tmp->width, py-tmp->height/2 ); // Copy the background
+               pic_overlay(tmp, 0, 1, &paddle, -1);
+               LCD_DrawPicture( background.width-border-tmp->width,py-tmp->height/2 , tmp);
+    }*/
+
     x += vx;
     y += vy;
     if (x <= xmin) {
@@ -100,10 +138,11 @@ void TIM17_IRQHandler(void)
 
     TempPicturePtr(tmp,29,29); // Create a temporary 29x29 image.
     pic_subset(tmp, &background, x-tmp->width/2, y-tmp->height/2); // Copy the background
-    pic_overlay(tmp, 0,0, object, 0xffff); // Overlay the object
+    pic_overlay(tmp,0,0, object, 0xffff); // Overlay the object - Ball
     pic_overlay(tmp, (px-paddle.width/2) - (x-tmp->width/2),
             (background.height-border-paddle.height) - (y-tmp->height/2),
             &paddle, 0xffff); // Draw the paddle into the image
+
     LCD_DrawPicture(x-tmp->width/2,y-tmp->height/2, tmp); // Re-draw it to the screen
 }
 
@@ -233,7 +272,7 @@ int main(void)
 
 
     // Set all pixels in the object to white.
-    /*for(int i=0; i<29*29; i++)
+    for(int i=0; i<29*29; i++)
         object->pix2[i] = 0xffff;
 
     pic_overlay(object,5,5,&ball,0xffff);
@@ -248,8 +287,10 @@ int main(void)
     vy = 1;
 
     px = -1; // Center of paddle offset (invalid initial value to force update)
+    py = -1;
     newpx = (xmax+xmin)/2; // New center of paddle
+    newpy = -1;
 
-    setup_tim17();*/
+    setup_tim17();
+
 }
-

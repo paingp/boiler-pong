@@ -8,7 +8,6 @@
   ******************************************************************************
 */
 
-
 #include "stm32f0xx.h"
 #include <stdlib.h>
 
@@ -28,7 +27,6 @@ void setup_joystick() {
     ADC1->CFGR1 |= ADC_CFGR1_RES;
     // Enable ADC
     ADC1->CR |= ADC_CR_ADEN;
-
     while(!(ADC1->ISR & ADC_ISR_ADRDY));
 }
 

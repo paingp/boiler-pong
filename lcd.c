@@ -941,6 +941,7 @@ void LCD_DrawString(u16 x,u16 y, u16 fc, u16 bg, const char *p, u8 size, u8 mode
 
 //===========================================================================
 // Draw a picture with upper left corner at (x0,y0).
+// (0, 0) is at the corner closest to pin 1 on the SPI pins for the SD card
 //===========================================================================
 void LCD_DrawPicture(int x0, int y0, const Picture *pic)
 {

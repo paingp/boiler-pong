@@ -96,6 +96,7 @@ void init_tim6(void)
     TIM6->PSC = 1200 - 1;
     TIM6->ARR = 2 - 1;
     TIM6->DIER |= TIM_DIER_UIE;
+    NVIC_SetPriority(TIM6_DAC_IRQn, 0);
     NVIC->ISER[0] = (1<<TIM6_DAC_IRQn);
     TIM6->CR2 &= ~TIM_CR2_MMS;
     TIM6->CR2 |= TIM_CR2_MMS_1;
@@ -115,8 +116,9 @@ void init_tim2(int n) {
     TIM2->ARR = n-1;
     TIM2->CR1 |= TIM_CR1_ARPE;
     TIM2->DIER |= TIM_DIER_UIE;
-    NVIC->ISER[0] |= (1<<TIM2_IRQn);
     NVIC_SetPriority(TIM2_IRQn, 1);
+    NVIC->ISER[0] |= (1<<TIM2_IRQn);
+
     TIM2->CR1 |= TIM_CR1_CEN;
 }
 

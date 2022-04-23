@@ -1,9 +1,10 @@
 /* GIMP RGB C-Source image dump (ball.c) */
 
+
 const struct {
   unsigned int 	 width;
   unsigned int 	 height;
-  unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */ 
+  unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
   unsigned char	 pixel_data[19 * 19 * 2 + 1];
 } ball = {
   19, 19, 2,
@@ -36,4 +37,3 @@ const struct {
   "\377_\262_\262_\262_\262_\262_\262_\262\377\377\377\377\377\377\377\377\377"
   "\377\377\377",
 };
-

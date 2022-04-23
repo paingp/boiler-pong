@@ -29,8 +29,9 @@ void setup_tim17()
         TIM17->PSC = 2000-1;
         TIM17->ARR = 24-1;
         TIM17->DIER |= TIM_DIER_UIE;
+        NVIC_SetPriority(TIM17_IRQn, 2);
         NVIC->ISER[0] = (1<<TIM17_IRQn);
-        NVIC_SetPriority(TIM2_IRQn, 3);
+
         TIM17->CR1 |= TIM_CR1_CEN;
 }
 int count = 0;
@@ -39,8 +40,6 @@ int py;
 void TIM17_IRQHandler(void)
 {
     TIM17->SR &= ~TIM_SR_UIF;
-
-
     check_key(input);
 
     if(count == 0) {
@@ -49,7 +48,6 @@ void TIM17_IRQHandler(void)
         input[2] = 0;
         input[3] = 0;
         count++;
-
     }
 /*
     if (input[0] < -10 && input[1] < -10) { //left x and down y
@@ -82,14 +80,23 @@ void TIM17_IRQHandler(void)
         }
     if (newpx - paddle.width/2 <= border || newpx + paddle.width/2 >= 240-border) {
         newpx = px;
-        newpy = py;
     }
+    if (newpy - paddle.height/2 <= border || newpy + paddle.height/2 >= 320-border)
+        newpy = py;
+
     if (newpx != px) {
         px = newpx;
         TempPicturePtr(tmp,61,5);
-        pic_subset(tmp, &background, px-tmp->width/2, background.height-border-tmp->height); // Copy the background
+        pic_subset(tmp, &background, px - tmp->width/2, tmp->height/2); // Copy the background
         pic_overlay(tmp, 1, 0, &paddle, -1);
-        LCD_DrawPicture(px-tmp->width/2, background.height-border-tmp->height, tmp);
+        LCD_DrawPicture(px - tmp->width/2, background.height - border - tmp->height, tmp);
+    }
+    if (newpy != py) {
+        py = newpy;
+        TempPicturePtr(tmp,61,5);
+        pic_subset(tmp, &background, tmp->width/2, py);
+        pic_overlay(tmp, 0,1, &paddle, -1);
+        LCD_DrawPicture(background.width - border - tmp->width/2, py ,   tmp);
     }
     /*else if(newpy != py) {
         py = newpy;
@@ -255,28 +262,12 @@ void pitch_wheel_change(int time, int chan, int value)
     }
 }
 
-
-
-int main(void)
-{
-    init_wavetable_hybrid2();
-    init_dac();
-    init_tim6();
-    MIDI_Player *mp = midi_init(midifile);
-    init_tim2(10417);
-    setup_buttons();
-    LCD_Setup(); // this will call init_lcd_spi()
-    setup_joystick();
-    //basic_drawing();
-    LCD_DrawPicture(0,0,&background);
-
-
+void init_lcd() {
     // Set all pixels in the object to white.
     for(int i=0; i<29*29; i++)
         object->pix2[i] = 0xffff;
 
     pic_overlay(object,5,5,&ball,0xffff);
-
     xmin = border + ball.width/2;
     xmax = background.width - border - ball.width/2;
     ymin = border + ball.width/2;
@@ -290,6 +281,21 @@ int main(void)
     py = -1;
     newpx = (xmax+xmin)/2; // New center of paddle
     newpy = -1;
+}
+
+int main(void)
+{
+    init_lcd();
+    init_wavetable_hybrid2();
+    init_dac();
+    init_tim6();
+    MIDI_Player *mp = midi_init(midifile);
+    init_tim2(10417);
+    setup_buttons();
+    LCD_Setup(); // this will call init_lcd_spi()
+    setup_joystick();
+    //basic_drawing();
+    LCD_DrawPicture(0,0,&background);
 
     setup_tim17();
 

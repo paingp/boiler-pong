@@ -3,8 +3,110 @@
 #include "lcd.h"
 #include "midi.h"
 #include "midiplay.h"
-
+uint32_t input[4];
 extern const Picture background; // A 240x320 background image
+extern const Picture ball; // A 19x19 purple ball with white boundaries
+extern const Picture paddle; // A 59x5 paddle
+const int border = 20;
+
+int xmin; // Farthest to the left the center of the ball can go
+int xmax; // Farthest to the right the center of the ball can go
+int ymin; // Farthest to the top the center of the ball can go
+int ymax; // Farthest to the bottom the center of the ball can go
+int x,y; // Center of ball
+int vx,vy; // Velocity components of ball
+
+int px; // Center of paddle offset
+int newpx; // New center of paddle
+#define TempPicturePtr(name,width,height) Picture name[(width)*(height)/6+2] = { {width,height,2} }
+
+TempPicturePtr(object,29,29);
+
+void setup_tim17()
+{
+    RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
+        TIM17->PSC = 2000-1;
+        TIM17->ARR = 24-1;
+        TIM17->DIER |= TIM_DIER_UIE;
+        NVIC->ISER[0] = (1<<TIM17_IRQn);
+        NVIC_SetPriority(TIM17_IRQn, 1);
+        TIM17->CR1 |= TIM_CR1_CEN;
+}
+
+void TIM17_IRQHandler(void)
+{
+    TIM17->SR &= ~TIM_SR_UIF;
+    check_key();
+    /*
+    int count = 0;
+    if(count == 0) {
+        input[0] = 0;
+        input[1] = 0;
+        input[2] = 0;
+        input[3] = 0;
+        count++;
+    }
+    */
+    if (input[0] < -10) {
+        newpx -= 1; }
+    else if(input[0] > 10) {
+        newpx += 1; }
+    if (newpx - paddle.width/2 <= border || newpx + paddle.width/2 >= 240-border)
+        newpx = px;
+    if (newpx != px) {
+        px = newpx;
+
+        TempPicturePtr(tmp,61,5);
+        pic_subset(tmp, &background, px-tmp->width/2, background.height-border-tmp->height); // Copy the background
+        pic_overlay(tmp, 1, 0, &paddle, -1);
+        LCD_DrawPicture(px-tmp->width/2, background.height-border-tmp->height, tmp);
+    }
+    x += vx;
+    y += vy;
+    if (x <= xmin) {
+        vx = - vx;
+        if (x < xmin)
+            x += vx;
+        perturb(&vx,&vy);
+    }
+    if (x >= xmax) {
+        // Ball hit the right wall.
+        vx = -vx;
+        if (x > xmax)
+            x += vx;
+        perturb(&vx,&vy);
+    }
+    if (y <= ymin) {
+        // Ball hit the top wall.
+        vy = - vy;
+        if (y < ymin)
+            y += vy;
+        perturb(&vx,&vy);
+    }
+    if (y >= ymax - paddle.height &&
+        x >= (px - paddle.width/2) &&
+        x <= (px + paddle.width/2)) {
+        // The ball has hit the paddle.  Bounce.
+        int pmax = ymax - paddle.height;
+        vy = -vy;
+        if (y > pmax)
+            y += vy;
+    }
+    else if (y >= ymax) {
+        // The ball has hit the bottom wall.  Set velocity of ball to 0,0.
+        vx = 0;
+        vy = 0;
+    }
+
+    TempPicturePtr(tmp,29,29); // Create a temporary 29x29 image.
+    pic_subset(tmp, &background, x-tmp->width/2, y-tmp->height/2); // Copy the background
+    pic_overlay(tmp, 0,0, object, 0xffff); // Overlay the object
+    pic_overlay(tmp, (px-paddle.width/2) - (x-tmp->width/2),
+            (background.height-border-paddle.height) - (y-tmp->height/2),
+            &paddle, 0xffff); // Draw the paddle into the image
+    LCD_DrawPicture(x-tmp->width/2,y-tmp->height/2, tmp); // Re-draw it to the screen
+}
+
 
 void init_lcd_spi(void)
 {
@@ -42,7 +144,6 @@ void move_ball(void);
 
 #define VOICES 15
 
-int32_t input[4];
 
 struct {
     uint8_t in_use;
@@ -115,6 +216,8 @@ void pitch_wheel_change(int time, int chan, int value)
     }
 }
 
+
+
 int main(void)
 {
     init_wavetable_hybrid2();
@@ -124,7 +227,29 @@ int main(void)
     init_tim2(10417);
     setup_buttons();
     LCD_Setup(); // this will call init_lcd_spi()
+    setup_joystick();
     //basic_drawing();
     LCD_DrawPicture(0,0,&background);
-    move_ball();
+
+
+    // Set all pixels in the object to white.
+    /*for(int i=0; i<29*29; i++)
+        object->pix2[i] = 0xffff;
+
+    pic_overlay(object,5,5,&ball,0xffff);
+
+    xmin = border + ball.width/2;
+    xmax = background.width - border - ball.width/2;
+    ymin = border + ball.width/2;
+    ymax = background.height - border - ball.height/2;
+    x = (xmin+xmax)/2; // Center of ball
+    y = ymin;
+    vx = 0; // Velocity components of ball
+    vy = 1;
+
+    px = -1; // Center of paddle offset (invalid initial value to force update)
+    newpx = (xmax+xmin)/2; // New center of paddle
+
+    setup_tim17();*/
 }
+

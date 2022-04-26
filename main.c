@@ -7,7 +7,7 @@ int32_t input[4];
 extern const Picture background; // A 240x320 background image
 extern const Picture ball; // A 19x19 purple ball with white boundaries
 extern const Picture paddle; // A 59x5 paddle
-const int border = 20;
+const int border = 5;
 
 int xmin; // Farthest to the left the center of the ball can go
 int xmax; // Farthest to the right the center of the ball can go
@@ -138,7 +138,12 @@ void TIM17_IRQHandler(void)
             y += vy;
     }
     else if (y >= ymax) {
-        // The ball has hit the bottom wall.  Set velocity of ball to 0,0.
+        // The ball has hit the bottom wall.
+        if (vx | vy) {
+            draw_r0(BLACK);
+            draw_r1(RED);
+        }
+        // Set velocity of ball to 0,0.
         vx = 0;
         vy = 0;
     }
@@ -268,7 +273,7 @@ void init_lcd() {
         object->pix2[i] = 0xffff;
 
     pic_overlay(object,5,5,&ball,0xffff);
-    xmin = border + ball.width/2;
+    xmin = border + ball.width/2 + 30;
     xmax = background.width - border - ball.width/2;
     ymin = border + ball.width/2;
     ymax = background.height - border - ball.height/2;
@@ -281,6 +286,32 @@ void init_lcd() {
     py = -1;
     newpx = (xmax+xmin)/2; // New center of paddle
     newpy = -1;
+}
+
+void draw_l0(u16 c) {
+    // L0
+    LCD_DrawFillRectangle(2, 170, 4, 190, c);
+    LCD_DrawFillRectangle(2, 188, 28, 190, c);
+    LCD_DrawFillRectangle(26, 170, 28, 190, c);
+    LCD_DrawFillRectangle(2, 170, 28, 172, c);
+}
+
+void draw_r0(u16 c) {
+    // R0
+    LCD_DrawFillRectangle(2, 120, 4, 140, c);
+    LCD_DrawFillRectangle(2, 138, 28, 140, c);
+    LCD_DrawFillRectangle(26, 120, 28, 140, c);
+    LCD_DrawFillRectangle(2, 120, 28, 122, c);
+}
+
+void draw_l1(u16 c) {
+    // L1
+    LCD_DrawFillRectangle(2, 179, 28, 181, c);
+}
+
+void draw_r1(u16 c) {
+    // R1
+    LCD_DrawFillRectangle(2, 129, 28, 131, c);
 }
 
 int main(void)
@@ -296,6 +327,10 @@ int main(void)
     setup_joystick();
     //basic_drawing();
     LCD_DrawPicture(0,0,&background);
+    LCD_DrawFillRectangle(14, 150, 17, 160, RED); // -
+
+    draw_l0(RED);
+    draw_r0(RED);
 
     setup_tim17();
 

@@ -138,14 +138,12 @@ void TIM17_IRQHandler(void)
             y += vy;
     }
     else if (y >= ymax) {
-        // The ball has hit the bottom wall.
-        if (vx | vy) {
-            draw_r0(BLACK);
-            draw_r1(RED);
-        }
-        // Set velocity of ball to 0,0.
+        // The ball has hit the bottom wall. Set velocity of ball to 0,0.
         vx = 0;
         vy = 0;
+
+        overwrite_scoreboard('r');
+        draw_digit(1, 'r', RED);
     }
 
     TempPicturePtr(tmp,29,29); // Create a temporary 29x29 image.
@@ -288,32 +286,6 @@ void init_lcd() {
     newpy = -1;
 }
 
-void draw_l0(u16 c) {
-    // L0
-    LCD_DrawFillRectangle(2, 170, 4, 190, c);
-    LCD_DrawFillRectangle(2, 188, 28, 190, c);
-    LCD_DrawFillRectangle(26, 170, 28, 190, c);
-    LCD_DrawFillRectangle(2, 170, 28, 172, c);
-}
-
-void draw_r0(u16 c) {
-    // R0
-    LCD_DrawFillRectangle(2, 120, 4, 140, c);
-    LCD_DrawFillRectangle(2, 138, 28, 140, c);
-    LCD_DrawFillRectangle(26, 120, 28, 140, c);
-    LCD_DrawFillRectangle(2, 120, 28, 122, c);
-}
-
-void draw_l1(u16 c) {
-    // L1
-    LCD_DrawFillRectangle(2, 179, 28, 181, c);
-}
-
-void draw_r1(u16 c) {
-    // R1
-    LCD_DrawFillRectangle(2, 129, 28, 131, c);
-}
-
 int main(void)
 {
     init_lcd();
@@ -327,10 +299,7 @@ int main(void)
     setup_joystick();
     //basic_drawing();
     LCD_DrawPicture(0,0,&background);
-    LCD_DrawFillRectangle(14, 150, 17, 160, RED); // -
-
-    draw_l0(RED);
-    draw_r0(RED);
+    init_scoreboard();
 
     setup_tim17();
 

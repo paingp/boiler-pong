@@ -8,6 +8,10 @@
 int32_t input[4];
 
 #define VOICES 15
+int player1 = 0;
+int player2 = 0;
+int reset = 0;
+
 
 struct {
     uint8_t in_use;
@@ -17,6 +21,39 @@ struct {
     int     step;
     int     offset;
 } voice[VOICES];
+
+void nanowait(unsigned int n) {
+    asm(    "        mov r0,%0\n"
+            "repeat: sub r0,#83\n"
+            "        bgt repeat\n" : : "r"(n) : "r0", "cc");
+}
+
+void draw_l0(u16 c) {
+    // L0
+    LCD_DrawFillRectangle(2, 170, 4, 190, c);
+    LCD_DrawFillRectangle(2, 188, 28, 190, c);
+    LCD_DrawFillRectangle(26, 170, 28, 190, c);
+    LCD_DrawFillRectangle(2, 170, 28, 172, c);
+}
+
+void draw_r0(u16 c) {
+    // R0
+    LCD_DrawFillRectangle(2, 120, 4, 140, c);
+    LCD_DrawFillRectangle(2, 138, 28, 140, c);
+    LCD_DrawFillRectangle(26, 120, 28, 140, c);
+    LCD_DrawFillRectangle(2, 120, 28, 122, c);
+}
+
+void draw_l1(u16 c) {
+    // L1
+    LCD_DrawFillRectangle(2, 179, 28, 181, c);
+}
+
+void draw_r1(u16 c) {
+    // R1
+    LCD_DrawFillRectangle(2, 129, 28, 131, c);
+}
+
 
 //MIDI
 void TIM6_DAC_IRQHandler(void)
@@ -380,10 +417,10 @@ void ball_vector() {
     }
     if (y <= ymin) {
         // Ball hit the top wall.
-        vy = -vy;
-        if (y < ymin)
-            y += vy;
-        perturb(&vx, &vy);
+        vx = 0;
+        vy = 0;
+        player2++;
+        reset = 1;
     }
     if (((y >= (py1 - paddle.height) && y <= (py1 + paddle.height) && x >= (px1 - paddle.width / 2) && x <= (px1 + paddle.width / 2)))
     || (y >= (py2 - paddle.height) && y <= (py2 + paddle.height) && x >= (px2 - paddle.width / 2) && x <= (px2 + paddle.width / 2))){
@@ -397,6 +434,8 @@ void ball_vector() {
         // The ball has hit the bottom wall.  Set velocity of ball to 0,0.
         vx = 0;
         vy = 0;
+        player1++;
+        reset = 1;
     }
 }
 
@@ -512,58 +551,89 @@ void init_screen_one() {
     newpy2 = ymin + 10;
 }
 
-void draw_l0(u16 c) {
-    // L0
-    LCD_DrawFillRectangle(2, 170, 4, 190, c);
-    LCD_DrawFillRectangle(2, 188, 28, 190, c);
-    LCD_DrawFillRectangle(26, 170, 28, 190, c);
-    LCD_DrawFillRectangle(2, 170, 28, 172, c);
-}
-
-void draw_r0(u16 c) {
-    // R0
-    LCD_DrawFillRectangle(2, 120, 4, 140, c);
-    LCD_DrawFillRectangle(2, 138, 28, 140, c);
-    LCD_DrawFillRectangle(26, 120, 28, 140, c);
-    LCD_DrawFillRectangle(2, 120, 28, 122, c);
-}
-
-void draw_l1(u16 c) {
-    // L1
-    LCD_DrawFillRectangle(2, 179, 28, 181, c);
-}
-
-void draw_r1(u16 c) {
-    // R1
-    LCD_DrawFillRectangle(2, 129, 28, 131, c);
-}
-
-
 int main(void) {
-    init_wavetable_hybrid2();
-    init_dac();
-    init_tim6();
-    MIDI_Player *mp = midi_init(midifile);
-    init_tim2(10417);
 
-    setup_buttons();
-    init_lcd_spi();
-    LCD_Setup();
+    switch (reset) {
+    case 0:
+        init_wavetable_hybrid2();
+        init_dac();
+        init_tim6();
+        MIDI_Player *mp = midi_init(midifile);
+        init_tim2(10417);
 
-    // Draw the background.
+        setup_buttons();
 
-    setup_joystick();
-    LCD_DrawPicture(0,0,&background);
-    LCD_DrawFillRectangle(14, 150, 17, 160, RED);
+        init_lcd_spi();
+        LCD_Setup();
 
-    draw_l0(RED);
-    draw_r0(RED);
+        // Draw the background.
 
-    init_screen_one();
+        setup_joystick();
+        init_screen_one();
 
-    for (;;) {
-        check_screen_forever();
-        if (mp->nexttick == MAXTICKS) { mp = midi_init(midifile); }
+        for (;;) {
+            draw_l0(RED); //Player 1
+            draw_r0(RED); //Player 2
+            LCD_DrawFillRectangle(14, 150, 17, 160, RED);
+            check_screen_forever();
+            if (mp->nexttick == MAXTICKS) {
+                mp = midi_init(midifile);
+            }
+            if(reset == 1) {
+                TIM2->CR1 &= ~TIM_CR1_CEN;
+                for(int x=0; x < sizeof voice / sizeof voice[0]; x++) {
+                    voice[x].in_use = 0;
+                }
+                break;
+            }
+        }
+        main();
+        break;
+    default:
+        reset = 0;
+        nanowait(5000000000);
+        init_wavetable_hybrid2();
+        init_dac();
+        init_tim6();
+
+        mp = midi_init(midifile);
+        init_tim2(10417);
+
+        setup_buttons();
+
+        init_lcd_spi();
+        LCD_Setup();
+
+
+        // Draw the background.
+
+        setup_joystick();
+        init_screen_one();
+        for (;;) {
+            switch (player2) {
+            case 0: draw_l0(RED); break;
+            case 1: draw_l1(RED); break;
+            default: draw_l0(RED); break;
+            }
+            switch (player1) {
+            case 0: draw_r0(RED); break;
+            case 1: draw_r1(RED); break;
+            default: draw_r0(RED); break;
+            }
+            LCD_DrawFillRectangle(14, 150, 17, 160, RED);
+            check_screen_forever();
+            if (mp->nexttick == MAXTICKS) {
+                mp = midi_init(midifile);
+            }
+            if (reset == 1) {
+                TIM2->CR1 &= ~TIM_CR1_CEN;
+                for (int x = 0; x < sizeof voice / sizeof voice[0]; x++) {
+                    voice[x].in_use = 0;
+                }
+                break;
+            }
+        }
+        main();
     }
 }
 

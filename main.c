@@ -138,12 +138,14 @@ void TIM17_IRQHandler(void)
             y += vy;
     }
     else if (y >= ymax) {
-        // The ball has hit the bottom wall. Set velocity of ball to 0,0.
+        // The ball has hit the bottom wall.
+        if (vx | vy) {
+            overwrite_scoreboard('r');
+            draw_digit(1, 'r', RED);
+        }
+        // Set velocity of ball to 0,0.
         vx = 0;
         vy = 0;
-
-        overwrite_scoreboard('r');
-        draw_digit(1, 'r', RED);
     }
 
     TempPicturePtr(tmp,29,29); // Create a temporary 29x29 image.

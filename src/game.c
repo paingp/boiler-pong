@@ -31,6 +31,9 @@ const int pr_xmin = 220;
 const int pr_xmax = 305;
 const int p_ymin = 29;
 const int p_ymax = 210;
+extern int player1;
+extern int player2;
+extern int reset;
 
 void perturb(int *vx, int *vy)
 {
@@ -74,12 +77,18 @@ void update_bpos() {
     ball.y += ball.vy;
     if (ball.x <= ball.xmin) {
         // Ball hits left wall
+        /*
         ball.vx = - ball.vx;
         if (ball.x < ball.xmin)
             ball.x += ball.vx;
         perturb(&(ball.vx), &(ball.vy));
+        */
+        ball.vx = 0;
+        ball.vy = 0;
+        player1++;
+        reset = 1;
+
     }
-    //(ball.x - 19 >= (pl[0] - ypaddle.width)) &&
     if ((ball.x - 4 <= (pl[0] + ypaddle.width)) && (ball.y < (pl[1] + 29)) && (ball.y > (pl[1] - 29))) {
         ball.vx = -ball.vx;
         if (ball.x > pl_xmin)
@@ -92,10 +101,16 @@ void update_bpos() {
     }
     if (ball.x >= ball.xmax) {
         // Ball hits right wall
+        /*
         ball.vx = -ball.vx;
         if (ball.x > ball.xmax)
             ball.x += ball.vx;
         perturb(&(ball.vx), &(ball.vy));
+         */
+        ball.vx = 0;
+        ball.vy = 0;
+        player2++;
+        reset = 1;
     }
     if (ball.y <= ball.ymin) {
         ball.vy = - ball.vy;
@@ -146,6 +161,43 @@ void update_pl() {
     LCD_DrawPicture(pl[0] - tmp->width/2, pl[1] - tmp->height/2, tmp);
 }
 
+void init_screen() {
+    pl[0] = 15;
+    pl[1] = 120;
+    pl[2] = 0;
+    pl[3] = 0;
+    pr[0] = 305;
+    pr[1] = 120;
+    pr[2] = 0;
+    pr[3] = 0;
+
+    ball.x = 160;
+    ball.y = 120;
+    ball.xmin = 10;
+    ball.xmax = 310;
+    ball.ymin = 10;
+    ball.ymax = 230;
+    ball.vx = -1;
+    ball.vy = 0;
+
+    TempPicturePtr(tmp, 10, 61);            // 15 -> 10
+    pic_subset(tmp, &background, pl[0] - tmp->width / 2, pl[1] - tmp->height / 2);
+    pic_overlay(tmp, 1, 1, &ypaddle, 0xffff);
+    LCD_DrawPicture(pl[0] - tmp->width / 2, pl[1] - tmp->height / 2, tmp);
+
+    TempPicturePtr(tmp1, 10, 61);            // 15 -> 10
+    pic_subset(tmp1, &background, pr[0] - tmp1->width / 2,
+            pr[1] - tmp1->height / 2);
+    pic_overlay(tmp1, 1, 1, &bpaddle, 0xffff);
+    LCD_DrawPicture(pr[0] - tmp1->width / 2, pr[1] - tmp1->height / 2, tmp1);
+
+    TempPicturePtr(tmp2, 29, 29); // Create a temporary 29x29 image.
+    pic_subset(tmp2, &background, ball.x - tmp2->width / 2,
+            ball.y - tmp2->height / 2); // Copy the background
+    pic_overlay(tmp2, 1, 1, object, 0xffff); // Overlay the object - Ball
+
+}
+
 void update_pr() {
     pr[2] = pr[0];
     pr[3] = pr[1];
@@ -176,51 +228,24 @@ void update_pr() {
     LCD_DrawPicture(pr[0] - tmp->width/2, pr[1] - tmp->height/2, tmp);
 }
 
-void setup_tim17() {
-    RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
-    TIM17->PSC = 2000-1;
-    TIM17->ARR = 24-1;
-    TIM17->DIER |= TIM_DIER_UIE;
-    NVIC_SetPriority(TIM17_IRQn, 2);
-    NVIC->ISER[0] = (1<<TIM17_IRQn);
-    TIM17->CR1 |= TIM_CR1_CEN;
-}
-
-void TIM17_IRQHandler(void)
-{
+void update_screen() {
     TIM17->SR &= ~TIM_SR_UIF;
     check_key(input);
     update_bpos();
     update_pl();
     update_pr();
-    TempPicturePtr(tmp,29,29); // Create a temporary 29x29 image.
-    pic_subset(tmp, &background, ball.x - tmp->width/2, ball.y - tmp->height/2); // Copy the background
+
+    TempPicturePtr(tmp, 29, 29); // Create a temporary 29x29 image.
+    pic_subset(tmp, &background, ball.x - tmp->width / 2, ball.y - tmp->height / 2); // Copy the background
     pic_overlay(tmp, 1, 1, object, 0xffff); // Overlay the object - Ball
     /*
-    pic_overlay(tmp, (pl[0] - ypaddle.width/2) - (pl[1] - tmp->width/2),
-            (background.height - border - ypaddle.height) - (ball.y - tmp->height/2),
-            &ypaddle, 0xffff); // Draw the paddle into the image
-    pic_overlay(tmp, (pr[0] - bpaddle.width/2) - (pr[1] - tmp->width/2),
-                (background.height - border - bpaddle.height) - (ball.y - tmp->height/2),
-                &bpaddle, 0xffff); // Draw the paddle into the image EDITED ONE
-    */
-    LCD_DrawPicture(ball.x - tmp->width/2, ball.y - tmp->height/2, tmp); // Re-draw it to the screen
-}
-
-void update_screen() {
-    check_key(input);
-    //update_bpos();
-    update_pl();
-    update_pr();
-    TempPicturePtr(tmp,29,29); // Create a temporary 29x29 image.
-    pic_subset(tmp, &background, ball.x - tmp->width/2, ball.y - tmp->height/2); // Copy the background
-    pic_overlay(tmp, 0, 0, object, 0xffff); // Overlay the object - Ball
-    pic_overlay(tmp, (pl[0] - ypaddle.width/2) - (pl[1] - tmp->width/2),
-            (background.height - border - ypaddle.height) - (ball.y - tmp->height/2),
-            &ypaddle, 0xffff); // Draw the paddle into the image
-    pic_overlay(tmp, (pr[0] - bpaddle.width/2) - (pr[1] - tmp->width/2),
-                (background.height - border - bpaddle.height) - (ball.y - tmp->height/2),
-                &bpaddle, 0xffff); // Draw the paddle into the image EDITED ONE
+     pic_overlay(tmp, (pl[0] - ypaddle.width/2) - (pl[1] - tmp->width/2),
+     (background.height - border - ypaddle.height) - (ball.y - tmp->height/2),
+     &ypaddle, 0xffff); // Draw the paddle into the image
+     pic_overlay(tmp, (pr[0] - bpaddle.width/2) - (pr[1] - tmp->width/2),
+     (background.height - border - bpaddle.height) - (ball.y - tmp->height/2),
+     &bpaddle, 0xffff); // Draw the paddle into the image EDITED ONE
+     */
     LCD_DrawPicture(ball.x - tmp->width/2, ball.y - tmp->height/2, tmp); // Re-draw it to the screen
 }
 

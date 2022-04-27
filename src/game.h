@@ -32,6 +32,8 @@ void overlay_ball();
 
 void update_bpos();
 
+void init_screen();
+
 void change_speed(int16_t vx, int16_t vy);
 
 void update_pl();

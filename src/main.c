@@ -14,8 +14,22 @@
 #include "lcd.h"
 #include "game.h"
 #include "joystick.h"
+#include "midi.h"
+#include "midiplay.h"
+#include "music.h"
+#include "scoreboard.c"
 
 extern const Picture background;
+
+int player1 = 0;
+int player2 = 0;
+int reset = 0;
+
+void nanowait(unsigned int n) {
+    asm(    "        mov r0,%0\n"
+            "repeat: sub r0,#83\n"
+            "        bgt repeat\n" : : "r"(n) : "r0", "cc");
+}
 
 void init_lcd_spi();
 void setup_buttons();
@@ -51,17 +65,81 @@ void setup_buttons(void)
     GPIOB->AFR[0] &= ~(0xf<<(3*4)) & ~(0xf<<(5*4));
 }
 
+void music(void) {
+    init_wavetable_hybrid2();
+    init_dac();
+    init_tim6();
+    //MIDI_Player *mp = midi_init(midifile);
+    init_tim2(10417);
+}
+
+void player_check(void) {
+    switch (player1) {
+    case 0:
+        break;
+    case 1:
+        break;
+    default:
+        break;
+    }
+    switch (player2) {
+    case 0:
+        break;
+    case 1:
+        break;
+    default:
+        break;
+    }
+}
+
+void draw_l0(u16 c) {
+    // L0
+    LCD_DrawFillRectangle(2, 170, 4, 190, c);
+    LCD_DrawFillRectangle(2, 188, 28, 190, c);
+    LCD_DrawFillRectangle(26, 170, 28, 190, c);
+    LCD_DrawFillRectangle(2, 170, 28, 172, c);
+}
+
+void draw_r0(u16 c) {
+    // R0
+    LCD_DrawFillRectangle(2, 120, 4, 140, c);
+    LCD_DrawFillRectangle(2, 138, 28, 140, c);
+    LCD_DrawFillRectangle(26, 120, 28, 140, c);
+    LCD_DrawFillRectangle(2, 120, 28, 122, c);
+}
+
 int main(void)
 {
+    MIDI_Player *mp = midi_init(midifile);
+    int store = 0; //Check if it is a reset and store 0 or 1
+    if(reset == 0) { music(); }
+    if(reset == 1) {
+        reset = 0;
+        nanowait(5000000000);
+        TIM2->CR1 |= TIM_CR1_CEN;
+        store++;
+    }
     overlay_ball();
     setup_buttons();
     LCD_Setup();
     setup_joystick();
-    LCD_DrawPicture(0,0, &background);
-    setup_tim17();
-    /*
-    for(;;) {
-        update_screen();
+    LCD_DrawPicture(0, 0, &background);
+    //draw_digit(1, 1, RED); //Use values with player1 and player2
+    if(store == 1) {
+        player_check();
+        init_screen();
+        store = 0;
     }
-    */
+    for (;;) {
+        update_screen();
+        if (mp->nexttick == MAXTICKS) {
+            mp = midi_init(midifile);
+        }
+        if (reset == 1) {
+            TIM2->CR1 &= ~TIM_CR1_CEN;
+            music_off();
+            break;
+        }
+    }
+    main();
 }

@@ -273,9 +273,9 @@ void init_lcd() {
         object->pix2[i] = 0xffff;
 
     pic_overlay(object,5,5,&ball,0xffff);
-    xmin = border + ball.width/2 + 30;
+    xmin = border + ball.width/2;
     xmax = background.width - border - ball.width/2;
-    ymin = border + ball.width/2;
+    ymin = border + ball.width/2 + 30;
     ymax = background.height - border - ball.height/2;
     x = (xmin+xmax)/2; // Center of ball
     y = ymin;

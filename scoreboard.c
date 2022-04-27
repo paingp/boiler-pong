@@ -2,175 +2,135 @@
 #include <stdlib.h>
 #include "lcd.h"
 
+void draw_segment(int seg, char dir, u16 c) {
+    switch (seg) {
+        case 1:
+            if (dir == 'l') {
+                // L1
+                LCD_DrawFillRectangle(125, 2, 145, 4, c);
+            } else {
+                // R1
+                LCD_DrawFillRectangle(175, 2, 195, 4, c);
+            }
+            break;
+        case 2:
+            if (dir == 'l') {
+                // L2
+                LCD_DrawFillRectangle(143, 2, 145, 14, c);
+            } else {
+                // R2
+                LCD_DrawFillRectangle(193, 2, 195, 14, c);
+
+            }
+            break;
+        case 3:
+            if (dir == 'l') {
+                // L3
+                LCD_DrawFillRectangle(143, 14, 145, 28, c);
+            } else {
+                // R3
+                LCD_DrawFillRectangle(193, 14, 195, 28, c);
+
+            }
+            break;
+        case 4:
+            if (dir == 'l') {
+                // L4
+                LCD_DrawFillRectangle(125, 26, 145, 28, c);
+            } else {
+                // R4
+                LCD_DrawFillRectangle(175, 26, 195, 28, c);
+            }
+            break;
+        case 5:
+            if (dir == 'l') {
+                // L5
+                LCD_DrawFillRectangle(125, 14, 127, 28, c);
+            } else {
+                // R5
+                LCD_DrawFillRectangle(175, 14, 177, 28, c);
+            }
+            break;
+        case 6:
+            if (dir == 'l') {
+                // L6
+                LCD_DrawFillRectangle(125, 2, 127, 14, c);
+            } else {
+                // R6
+                LCD_DrawFillRectangle(175, 2, 177, 14, c);
+            }
+            break;
+        case 7:
+            if (dir == 'l') {
+                // L7
+                LCD_DrawFillRectangle(125, 13, 145, 15, c);
+            } else {
+                // R7
+                LCD_DrawFillRectangle(175, 13, 195, 15, c);
+            }
+            break;
+        default:
+            LCD_DrawFillRectangle(155, 14, 165, 17, RED);
+            break;
+        }
+}
+
 void draw_digit(int digit, char dir, u16 c) {
     switch (digit) {
     case 1:
-        if (dir == 'l') {
-            // L1
-            LCD_DrawFillRectangle(2, 179, 28, 181, c);
-        } else {
-            // R1
-            LCD_DrawFillRectangle(2, 129, 28, 131, c);
-        }
-        break;
+            draw_segment(2, dir, c);
+            draw_segment(3, dir, c);
+            break;
     case 2:
-        if (dir == 'l') {
-            // L2
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(26, 170, 28, 190, c);
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-            LCD_DrawFillRectangle(2, 170, 16, 172, c);
-            LCD_DrawFillRectangle(14, 188, 28, 190, c);
-        } else {
-            // R2
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(26, 120, 28, 140, c);
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-            LCD_DrawFillRectangle(2, 120, 16, 122, c);
-            LCD_DrawFillRectangle(14, 138, 28, 140, c);
-        }
-        break;
+            draw_segment(1, dir, c);
+            draw_segment(2, dir, c);
+            draw_segment(4, dir, c);
+            draw_segment(5, dir, c);
+            draw_segment(7, dir, c);
+
+            break;
     case 3:
-        if (dir == 'l') {
-            // L3
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(26, 170, 28, 190, c);
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-            LCD_DrawFillRectangle(2, 170, 28, 172, c);
-        } else {
-            // R3
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(26, 120, 28, 140, c);
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-            LCD_DrawFillRectangle(2, 120, 28, 122, c);
-        }
-        break;
+            draw_segment(1, dir, c);
+            draw_segment(2, dir, c);
+            draw_segment(3, dir, c);
+            draw_segment(4, dir, c);
+            draw_segment(7, dir, c);
+            break;
     case 4:
-        if (dir == 'l') {
-            // L4
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-            LCD_DrawFillRectangle(2, 170, 28, 172, c);
-            LCD_DrawFillRectangle(2, 188, 16, 190, c);
-        } else {
-            // R4
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-            LCD_DrawFillRectangle(2, 120, 28, 122, c);
-            LCD_DrawFillRectangle(2, 138, 16, 140, c);
-        }
-        break;
+            draw_segment(2, dir, c);
+            draw_segment(3, dir, c);
+            draw_segment(6, dir, c);
+            draw_segment(7, dir, c);
+            break;
     case 5:
-        if (dir == 'l') {
-            // L5
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(26, 170, 28, 190, c);
-
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-
-            LCD_DrawFillRectangle(14, 170, 28, 172, c);
-            LCD_DrawFillRectangle(2, 188, 16, 190, c);
-        } else {
-            // R5
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(26, 120, 28, 140, c);
-
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-
-            LCD_DrawFillRectangle(2, 138, 16, 140, c);
-            LCD_DrawFillRectangle(14, 120, 28, 122, c);
-        }
-        break;
-    case 6:
-        if (dir == 'l') {
-            // L6
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(26, 170, 28, 190, c);
-
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-            LCD_DrawFillRectangle(14, 188, 28, 190, c);
-
-            LCD_DrawFillRectangle(14, 170, 28, 172, c);
-            LCD_DrawFillRectangle(2, 188, 16, 190, c);
-        } else {
-            // R6
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(26, 120, 28, 140, c);
-
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-            LCD_DrawFillRectangle(14, 138, 28, 140, c);
-
-            LCD_DrawFillRectangle(2, 138, 16, 140, c);
-            LCD_DrawFillRectangle(14, 120, 28, 122, c);
-        }
-        break;
-    case 7:
-        if (dir == 'l') {
-            // L7
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(2, 170, 28, 172, c);
-        } else {
-            // R7
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(2, 120, 28, 122, c);
-        }
-        break;
+            draw_segment(1, dir, c);
+            draw_segment(3, dir, c);
+            draw_segment(4, dir, c);
+            draw_segment(6, dir, c);
+            draw_segment(7, dir, c);
+            break;
     case 8:
-        if (dir == 'l') {
-            // L8
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(2, 188, 28, 190, c);
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-            LCD_DrawFillRectangle(26, 170, 28, 190, c);
-            LCD_DrawFillRectangle(2, 170, 28, 172, c);
-        } else {
-            // R8
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(2, 138, 28, 140, c);
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-            LCD_DrawFillRectangle(26, 120, 28, 140, c);
-            LCD_DrawFillRectangle(2, 120, 28, 122, c);
-        }
-        break;
-    case 9:
-        if (dir == 'l') {
-            // L9
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-
-            LCD_DrawFillRectangle(14, 170, 16, 190, c);
-
-            LCD_DrawFillRectangle(2, 170, 28, 172, c);
-            LCD_DrawFillRectangle(2, 188, 16, 190, c);
-        } else {
-            // R9
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-
-            LCD_DrawFillRectangle(14, 120, 16, 140, c);
-
-            LCD_DrawFillRectangle(2, 120, 28, 122, c);
-            LCD_DrawFillRectangle(2, 138, 16, 140, c);
-        }
-        break;
+            draw_segment(1, dir, c);
+            draw_segment(2, dir, c);
+            draw_segment(3, dir, c);
+            draw_segment(4, dir, c);
+            draw_segment(5, dir, c);
+            draw_segment(6, dir, c);
+            draw_segment(7, dir, c);
+            break;
     default:
-        if (dir == 'l') {
-            // L0
-            LCD_DrawFillRectangle(2, 170, 4, 190, c);
-            LCD_DrawFillRectangle(2, 188, 28, 190, c);
-            LCD_DrawFillRectangle(26, 170, 28, 190, c);
-            LCD_DrawFillRectangle(2, 170, 28, 172, c);
-        } else {
-            // R0
-            LCD_DrawFillRectangle(2, 120, 4, 140, c);
-            LCD_DrawFillRectangle(2, 138, 28, 140, c);
-            LCD_DrawFillRectangle(26, 120, 28, 140, c);
-            LCD_DrawFillRectangle(2, 120, 28, 122, c);
-        }
+        draw_segment(1, dir, c);
+        draw_segment(2, dir, c);
+        draw_segment(3, dir, c);
+        draw_segment(4, dir, c);
+        draw_segment(5, dir, c);
+        draw_segment(6, dir, c);
         break;
     }
 }
 
 void init_scoreboard() {
-    LCD_DrawFillRectangle(14, 150, 17, 160, RED); // -
+    LCD_DrawFillRectangle(155, 14, 165, 17, RED); // -
 
     draw_digit(0, 'l', RED);
     draw_digit(0, 'r', RED);

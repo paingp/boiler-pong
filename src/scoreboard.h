@@ -16,4 +16,6 @@ void init_scoreboard();
 
 void overwrite_scoreboard();
 
+void disp_win(u16 c);
+
 #endif /* SCOREBOARD_H_ */
